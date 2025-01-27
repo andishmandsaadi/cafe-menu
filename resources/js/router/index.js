@@ -1,11 +1,13 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import Dashboard from '@/views/Dashboard.vue';
 import Categories from '@/views/Categories.vue';
+import CafeOwners from '@/views/CafeOwners.vue';
 import Products from '@/views/Products.vue';
 
 const routes = [
     { path: '/', component: Dashboard },
     { path: '/categories', component: Categories },
+    { path: '/cafe-owners', component: CafeOwners },
     { path: '/products', component: Products },
 ];
 
