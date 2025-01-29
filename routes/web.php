@@ -8,6 +8,8 @@ use App\Http\Controllers\Api\ProductController;
 Route::apiResource('api/cafe-owners', CafeOwnerController::class);
 Route::apiResource('api/categories', CategoryController::class);
 Route::apiResource('api/products', ProductController::class);
+Route::post('api/cafe-owners/{id}/assign-categories', [CafeOwnerController::class, 'assignCategories']);
+Route::delete('api/cafe-owners/{ownerId}/unassign-category/{categoryId}', [CafeOwnerController::class, 'unassignCategory']);
 Route::get('/', function () {
     return view('welcome');
 });
@@ -20,6 +22,7 @@ Route::get('/owners/{id}/categories', [CategoryController::class, 'index']);
 Route::post('/owners/{id}/categories', [CategoryController::class, 'store']);
 Route::put('/owners/{id}/categories/{category_id}', [CategoryController::class, 'update']);
 Route::delete('/owners/{id}/categories/{category_id}', [CategoryController::class, 'destroy']);
+// Route::post('/owners/{id}/assign-categories', [CafeOwnerController::class, 'assignCategories']);
 
 Route::get('/{any}', function () {
     return view('layouts.app');

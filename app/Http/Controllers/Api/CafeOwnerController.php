@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
+use App\Models\Category;
 
 class CafeOwnerController extends Controller
 {
@@ -52,15 +53,56 @@ class CafeOwnerController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show($id)
+    {
+        $owner = CafeOwner::with('categories')->find($id);
+
+        if (!$owner) {
+            return response()->json(['message' => 'Owner not found'], 404);
+        }
+
+        $allCategories = Category::all();
+
+        return response()->json([
+            'owner' => $owner,
+            'categories' => $allCategories
+        ], 200);
+    }
+
+    public function assignCategories(Request $request, $id)
     {
         $owner = CafeOwner::find($id);
 
         if (!$owner) {
-            return response()->json(['message' => 'Cafe owner not found'], 404);
+            return response()->json(['message' => 'Owner not found'], 404);
         }
 
-        return response()->json($owner, 200);
+        $validated = $request->validate([
+            'category_ids' => 'required|array',
+            'category_ids.*' => 'exists:categories,id',
+        ]);
+
+        // Use attach to add new categories without removing existing ones
+        $owner->categories()->attach($validated['category_ids']);
+
+        return response()->json([
+            'message' => 'Categories assigned successfully',
+            'assigned_categories' => $owner->categories
+        ], 200);
+    }
+
+    public function unassignCategory($ownerId, $categoryId)
+    {
+        $owner = CafeOwner::find($ownerId);
+
+        if (!$owner) {
+            return response()->json(['message' => 'Owner not found'], 404);
+        }
+
+        // Detach the category
+        $owner->categories()->detach($categoryId);
+
+        return response()->json(['message' => 'Category unassigned successfully'], 200);
     }
 
     /**
