@@ -86,6 +86,9 @@
           <button class="btn btn-primary" @click="assignProducts">Assign Products</button>
         </div>
 
+        <!-- Add Product Button -->
+        <button class="btn btn-success mt-2" @click="showAddProductModal = true">+ Add New Product</button>
+
         <!-- Assigned Products List -->
         <div>
           <h5>Assigned Products</h5>
@@ -98,6 +101,27 @@
         </div>
 
         <button class="btn btn-secondary mt-3" @click="showManageProductsModalVisible = false">Close</button>
+      </div>
+    </div>
+
+    <!-- Add Product Modal -->
+    <div v-if="showAddProductModal" class="modal-overlay">
+      <div class="modal-content">
+        <h4>Add New Product</h4>
+        <div class="form-group">
+          <label>Product Name</label>
+          <input type="text" v-model="newProduct.name" class="form-control" placeholder="Enter product name" />
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea v-model="newProduct.description" class="form-control" placeholder="Enter product description"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Image</label>
+          <input type="file" @change="handleImageUpload" class="form-control" />
+        </div>
+        <button class="btn btn-primary mt-3" @click="addProduct">Save Product</button>
+        <button class="btn btn-secondary mt-3 ml-2" @click="showAddProductModal = false">Cancel</button>
       </div>
     </div>
   </div>
@@ -120,11 +144,17 @@ export default {
         image: null,
       },
       showManageProductsModalVisible: false,
+      showAddProductModal: false,
       selectedCategory: {},
       selectedProducts: [],
       ownerProductPrice: null,
       assignedProducts: [],
       unassignedProducts: [],
+      newProduct: {
+        name: '',
+        description: '',
+        image: null,
+      },
     };
   },
   computed: {
@@ -223,13 +253,39 @@ export default {
       await this.fetchProductsForCategory(category.id);
     },
     async fetchProductsForCategory(categoryId) {
-      const ownerId = this.owner.id; // Get the current owner's ID
+      const ownerId = this.owner.id;
       try {
         const response = await axios.get(`/api/categories/${categoryId}/owner/${ownerId}/products`);
         this.unassignedProducts = response.data.unassignedProducts;
         this.assignedProducts = response.data.assignedProducts;
       } catch (error) {
         Swal.fire('Error', 'Failed to fetch products', 'error');
+      }
+    },
+    async addProduct() {
+      if (!this.newProduct.name || !this.newProduct.description) {
+        Swal.fire('Warning', 'Please fill in all required fields', 'warning');
+        return;
+      }
+
+      let formData = new FormData();
+      formData.append('name', this.newProduct.name);
+      formData.append('description', this.newProduct.description);
+        if (this.newProduct.image) {
+          formData.append('image', this.newProduct.image);
+        }
+        formData.append('categories[]', this.selectedCategory.id);
+
+      try {
+        const response = await axios.post('/api/products', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+
+        Swal.fire('Success', 'Product added successfully', 'success');
+        this.showAddProductModal = false;
+        this.fetchProductsForCategory(this.selectedCategory.id); // Refresh product list
+      } catch (error) {
+        Swal.fire('Error', 'Failed to add product', 'error');
       }
     },
     async assignProducts() {

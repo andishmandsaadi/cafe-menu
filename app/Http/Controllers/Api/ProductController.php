@@ -80,6 +80,10 @@ class ProductController extends Controller
     {
         $product = Product::find($id);
 
+        $request->merge([
+            'categories' => is_string($request->categories) ? json_decode($request->categories, true) : $request->categories,
+        ]);
+
         if (!$product) {
             return response()->json(['message' => 'Product not found'], 404);
         }
