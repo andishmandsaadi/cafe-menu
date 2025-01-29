@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Category;
+use App\Models\CafeOwner;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -133,4 +134,45 @@ class ProductController extends Controller
 
         return response()->json(['message' => 'Product deleted successfully'], 200);
     }
+
+    public function showProduct($username, $categorySlug, $productSlug)
+    {
+        // Find the cafe owner
+        $owner = CafeOwner::where('username', $username)->firstOrFail();
+
+        // Find the category
+        $category = Category::where('slug', $categorySlug)->firstOrFail();
+
+        // Find the product and ensure it belongs to this category
+        $product = Product::where('slug', $productSlug)
+            ->whereHas('categories', function ($query) use ($category) {
+                $query->where('categories.id', $category->id);
+            })
+            ->firstOrFail();
+
+        // Get the price from cafe_owner_product pivot table
+        $ownerProduct = $owner->products()
+            ->wherePivot('category_id', $category->id)
+            ->wherePivot('product_id', $product->id)
+            ->first();
+
+        // Attach the price to the product object
+        $product->owner_price = $ownerProduct ? $ownerProduct->pivot->price : 'N/A';
+
+        // Find alternative cafes that also sell this product in the same category
+        $alternativeCafes = CafeOwner::whereHas('products', function ($query) use ($category, $product) {
+            $query->where('cafe_owner_product.category_id', $category->id)
+                ->where('cafe_owner_product.product_id', $product->id);
+        })
+        ->where('id', '!=', $owner->id) // Exclude the current cafe
+        ->with(['products' => function ($query) use ($category, $product) {
+            $query->where('cafe_owner_product.category_id', $category->id)
+                ->where('cafe_owner_product.product_id', $product->id)
+                ->select('products.*', 'cafe_owner_product.price'); // Fetch product price from pivot table
+        }])
+        ->get();
+
+        return view('product.show', compact('owner', 'category', 'product', 'alternativeCafes'));
+    }
+
 }

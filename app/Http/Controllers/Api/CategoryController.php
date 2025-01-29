@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\CafeOwner;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Validator;
@@ -154,5 +155,30 @@ class CategoryController extends Controller
         $category->delete();
 
         return response()->json(['message' => 'Category deleted successfully'], 200);
+    }
+
+    public function showCategory($username, $categorySlug)
+    {
+        // Find the cafe owner
+        $owner = CafeOwner::where('username', $username)->firstOrFail();
+
+        // Find the category
+        $category = Category::where('slug', $categorySlug)->firstOrFail();
+
+        // Fetch products assigned to this owner and category from cafe_owner_product
+        $products = Product::whereHas('cafeOwners', function ($query) use ($owner, $category) {
+            $query->where('cafe_owner_id', $owner->id)
+                ->where('category_id', $category->id);
+        })->with(['cafeOwners' => function ($query) use ($owner, $category) {
+            $query->where('cafe_owner_id', $owner->id)
+                ->where('category_id', $category->id);
+        }])->get();
+
+        // Attach price from pivot table
+        foreach ($products as $product) {
+            $product->owner_price = optional($product->cafeOwners->first())->pivot->price ?? 'N/A';
+        }
+
+        return view('category.show', compact('owner', 'category', 'products'));
     }
 }

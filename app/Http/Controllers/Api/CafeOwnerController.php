@@ -192,4 +192,11 @@ class CafeOwnerController extends Controller
 
         return response()->json(['message' => 'Cafe owner deleted successfully'], 200);
     }
+
+    public function showUsers($username)
+    {
+        $owner = CafeOwner::where('username', $username)->with('categories')->firstOrFail();
+        return view('cafe.show', compact('owner'));
+    }
+
 }
