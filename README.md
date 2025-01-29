@@ -52,17 +52,17 @@ DB_DATABASE=/absolute/path/to/database.sqlite
 ```sh
  php artisan migrate --seed
 ```
-### 5️⃣ Run Storage Link
+### 6️⃣ Run Storage Link
 ```sh
  php artisan storage:link
 ```
 
-### 6️⃣ Compile Vue Assets
+### 7️⃣ Compile Vue Assets
 ```sh
  npm run build
 ```
 
-### 7️⃣ Serve the Application
+### 8️⃣ Serve the Application
 ```sh
  php artisan serve
 ```
