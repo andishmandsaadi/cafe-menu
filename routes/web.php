@@ -10,6 +10,11 @@ use Illuminate\Support\Facades\Response;
 use App\Http\Controllers\Admin\AdminDashboardController;
 
 Route::get('/admin', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
+Route::prefix('/admin')->group(function () {
+    Route::get('/{any}', function () {
+        return view('layouts.admin');
+    })->where('any', '.*');
+});
 
 // Owners management page (homepage)
 Route::get('/owners/{id}/categories', [CategoryController::class, 'index']);
@@ -53,5 +58,5 @@ Route::get('/{username}/{categorySlug}', [CategoryController::class, 'showCatego
 Route::get('/{username}/{categorySlug}/{productSlug}', [ProductController::class, 'showProduct'])->name('product.show');
 
 Route::get('/{any}', function () {
-    return view('layouts.admin');
+    return view('layouts.app');
 })->where('any', '.*');

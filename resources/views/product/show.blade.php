@@ -30,7 +30,7 @@
                     @endphp
                     <li class="list-group-item d-flex justify-content-between align-items-center">
                         <div>
-                            <strong>{{ $altCafe->first_name }}'s Cafe</strong> - {{ $altPrice }} TL
+                            <strong>{{ $altCafe->first_name }} Kafe</strong> - {{ $altPrice }} TL
                         </div>
                         <a href="{{ route('product.show', [$altCafe->username, $category->slug, $product->slug]) }}" class="btn btn-primary btn-sm">
                             Ürünü Gör

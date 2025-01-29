@@ -11,13 +11,13 @@
         <h1 class="mb-4">Admin Dashboard</h1>
 
         <div class="list-group">
-            <a href="{{ url('/cafe-owners') }}" class="list-group-item list-group-item-action">
+            <a href="{{ url('/admin/cafe-owners') }}" class="list-group-item list-group-item-action">
                 Manage Cafe Owners
             </a>
-            <a href="{{ url('/categories') }}" class="list-group-item list-group-item-action">
+            <a href="{{ url('/admin/categories') }}" class="list-group-item list-group-item-action">
                 Manage Categories
             </a>
-            <a href="{{ url('/products') }}" class="list-group-item list-group-item-action">
+            <a href="{{ url('/admin/products') }}" class="list-group-item list-group-item-action">
                 Manage Products
             </a>
         </div>

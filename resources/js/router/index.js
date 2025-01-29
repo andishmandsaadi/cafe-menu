@@ -7,9 +7,9 @@ import Products from '@/views/Products.vue';
 
 const routes = [
     { path: '/', component: Dashboard },
-    { path: '/categories', component: Categories },
-    { path: '/cafe-owners', component: CafeOwners },
-    { path: '/products', component: Products },
+    { path: '/admin/categories', component: Categories },
+    { path: '/admin/cafe-owners', component: CafeOwners },
+    { path: '/admin/products', component: Products },
     { path: '/owners/:id', component: OwnerCategories, props: true },
 ];
 
