@@ -15,4 +15,11 @@ class CafeOwner extends Model
     {
         return $this->belongsToMany(Category::class, 'cafe_owner_category');
     }
+
+    public function products()
+    {
+        return $this->belongsToMany(Product::class, 'cafe_owner_product')
+                    ->withPivot('category_id', 'price')
+                    ->withTimestamps();
+    }
 }

@@ -13,7 +13,10 @@
     <ul class="list-group">
       <li class="list-group-item d-flex justify-content-between align-items-center" v-for="category in owner.categories" :key="category.id">
         {{ category.name }}
-        <button class="btn btn-danger btn-sm" @click="unassignCategory(category.id)">Unassign</button>
+        <div>
+          <button class="btn btn-info btn-sm me-2" @click="showManageProductsModal(category)">Manage Products</button>
+          <button class="btn btn-danger btn-sm" @click="unassignCategory(category.id)">Unassign</button>
+        </div>
       </li>
     </ul>
 
@@ -55,6 +58,48 @@
         <button class="btn btn-secondary mt-3 ml-2" @click="showAddModal = false">Cancel</button>
       </div>
     </div>
+
+    <!-- Manage Products Modal -->
+    <div v-if="showManageProductsModalVisible" class="modal-overlay">
+      <div class="modal-content">
+        <h4>Manage Products for {{ selectedCategory.name }}</h4>
+
+        <!-- Assign Products Section -->
+        <div class="mb-4">
+          <h5>Assign Products</h5>
+          <div class="form-group">
+            <label>Select Products:</label>
+            <select v-model="selectedProducts" multiple class="form-control">
+              <option
+                v-for="product in unassignedProducts"
+                :key="product.id"
+                :value="product.id"
+              >
+                {{ product.name }}
+              </option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Price for Owner</label>
+            <input type="number" v-model="ownerProductPrice" class="form-control" placeholder="Enter price" />
+          </div>
+          <button class="btn btn-primary" @click="assignProducts">Assign Products</button>
+        </div>
+
+        <!-- Assigned Products List -->
+        <div>
+          <h5>Assigned Products</h5>
+          <ul class="list-group">
+            <li class="list-group-item d-flex justify-content-between align-items-center" v-for="product in assignedProducts" :key="product.id">
+              {{ product.name }} - Owner Price: {{ product.owner_price }}
+              <button class="btn btn-danger btn-sm" @click="unassignProduct(product.id)">Unassign</button>
+            </li>
+          </ul>
+        </div>
+
+        <button class="btn btn-secondary mt-3" @click="showManageProductsModalVisible = false">Close</button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -74,6 +119,12 @@ export default {
         name: '',
         image: null,
       },
+      showManageProductsModalVisible: false,
+      selectedCategory: {},
+      selectedProducts: [],
+      ownerProductPrice: null,
+      assignedProducts: [],
+      unassignedProducts: [],
     };
   },
   computed: {
@@ -155,6 +206,64 @@ export default {
     },
     isCategoryAssigned(categoryId) {
       return this.owner.categories.some((category) => category.id === categoryId);
+    },
+    async fetchOwnerData() {
+      const ownerId = this.$route.params.id;
+      try {
+        const response = await axios.get(`/api/cafe-owners/${ownerId}`);
+        this.owner = response.data.owner;
+        this.allCategories = response.data.categories;
+      } catch (error) {
+        Swal.fire('Error', 'Failed to load owner data', 'error');
+      }
+    },
+    async showManageProductsModal(category) {
+      this.selectedCategory = category;
+      this.showManageProductsModalVisible = true;
+      await this.fetchProductsForCategory(category.id);
+    },
+    async fetchProductsForCategory(categoryId) {
+      const ownerId = this.owner.id; // Get the current owner's ID
+      try {
+        const response = await axios.get(`/api/categories/${categoryId}/owner/${ownerId}/products`);
+        this.unassignedProducts = response.data.unassignedProducts;
+        this.assignedProducts = response.data.assignedProducts;
+      } catch (error) {
+        Swal.fire('Error', 'Failed to fetch products', 'error');
+      }
+    },
+    async assignProducts() {
+      if (!this.selectedProducts.length || !this.ownerProductPrice) {
+        Swal.fire('Warning', 'Please select products and enter a price', 'warning');
+        return;
+      }
+
+      const ownerId = this.$route.params.id;
+      const categoryId = this.selectedCategory.id;
+
+      try {
+        await axios.post(`/api/cafe-owners/${ownerId}/assign-products`, {
+          category_id: categoryId,
+          product_ids: this.selectedProducts,
+          price: this.ownerProductPrice,
+        });
+        Swal.fire('Success', 'Products assigned successfully', 'success');
+        this.fetchProductsForCategory(categoryId);
+      } catch (error) {
+        Swal.fire('Error', 'Failed to assign products', 'error');
+      }
+    },
+    async unassignProduct(productId) {
+      const ownerId = this.$route.params.id;
+      const categoryId = this.selectedCategory.id;
+
+      try {
+        await axios.delete(`/api/cafe-owners/${ownerId}/unassign-product/${categoryId}/${productId}`);
+        Swal.fire('Success', 'Product unassigned successfully', 'success');
+        this.fetchProductsForCategory(categoryId);
+      } catch (error) {
+        Swal.fire('Error', 'Failed to unassign product', 'error');
+      }
     },
   },
 };

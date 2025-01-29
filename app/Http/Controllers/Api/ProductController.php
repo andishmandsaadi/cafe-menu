@@ -31,7 +31,6 @@ class ProductController extends Controller
         // Validate incoming request
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'price' => 'required|numeric|min:0',
             'description' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'categories' => 'required|array',
@@ -45,7 +44,6 @@ class ProductController extends Controller
         $product = new Product();
         $product->name = $request->name;
         $product->slug = Str::slug($request->name);
-        $product->price = $request->price;
         $product->description = $request->description;
 
         if ($request->hasFile('image')) {
@@ -89,7 +87,6 @@ class ProductController extends Controller
         // Validate incoming request
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'price' => 'required|numeric|min:0',
             'description' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'categories' => 'required|array',
@@ -102,7 +99,6 @@ class ProductController extends Controller
 
         $product->name = $request->name;
         $product->slug = Str::slug($request->name);
-        $product->price = $request->price;
         $product->description = $request->description;
 
         if ($request->hasFile('image')) {

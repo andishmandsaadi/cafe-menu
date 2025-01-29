@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Validator;
@@ -62,6 +63,41 @@ class CategoryController extends Controller
         return response()->json($category, 200);
     }
 
+    public function getProductsByCategory($categoryId, $ownerId)
+    {
+        $category = Category::find($categoryId);
+
+        if (!$category) {
+            return response()->json(['message' => 'Category not found'], 404);
+        }
+
+        // Get all products linked to this category
+        $allProducts = $category->products;
+
+        // Get assigned products only for this owner
+        $assignedProducts = Product::whereHas('cafeOwners', function ($query) use ($categoryId, $ownerId) {
+            $query->where('category_id', $categoryId)
+                  ->where('cafe_owner_id', $ownerId); // Ensure only the current owner's products are fetched
+        })->with(['cafeOwners' => function ($query) use ($categoryId, $ownerId) {
+            $query->where('category_id', $categoryId)
+                  ->where('cafe_owner_id', $ownerId);
+        }])->get();
+
+        // Include the correct pivot price for the owner
+        $assignedProducts->each(function ($product) use ($ownerId) {
+            $product->owner_price = optional($product->cafeOwners->first())->pivot->price ?? null;
+        });
+
+        // Get unassigned products (products in category but not assigned to the current owner)
+        $assignedProductIds = $assignedProducts->pluck('id')->toArray();
+        $unassignedProducts = $allProducts->whereNotIn('id', $assignedProductIds)->values();
+
+        return response()->json([
+            'assignedProducts' => $assignedProducts,
+            'unassignedProducts' => $unassignedProducts,
+        ]);
+    }
+
     /**
      * Update the specified resource in storage.
      */
@@ -76,7 +112,7 @@ class CategoryController extends Controller
         // Validate incoming request
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255|unique:categories,name,' . $category->id,
-            'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'image' => 'nullable', // Allow the image field to be nullable
         ]);
 
         if ($validator->fails()) {
@@ -86,9 +122,17 @@ class CategoryController extends Controller
         $category->name = $request->name;
         $category->slug = Str::slug($request->name);
 
+        // Check if the image field is a file (new upload) or a string (existing image path)
         if ($request->hasFile('image')) {
+            // If a new image is uploaded, store it and update the image path
             $imagePath = $request->file('image')->store('categories', 'public');
             $category->image = $imagePath;
+        } elseif ($request->image && is_string($request->image)) {
+            // If the image field is a string (existing image path), keep the existing image
+            $category->image = $request->image;
+        } else {
+            // If no image is provided, set the image to null (or keep the existing image)
+            $category->image = $category->image; // Keep the existing image
         }
 
         $category->save();

@@ -10,8 +10,8 @@
       <thead>
         <tr>
           <th>#</th>
+          <th>Image</th>
           <th>Name</th>
-          <th>Price</th>
           <th>Categories</th>
           <th>Actions</th>
         </tr>
@@ -28,7 +28,6 @@
             />
           </td>
           <td>{{ product.name }}</td>
-          <td>{{ product.price }}</td>
           <td>
             <span v-for="category in product.categories" :key="category.id" class="badge bg-secondary me-1">
               {{ category.name }}
@@ -54,10 +53,6 @@
             <div class="mb-3">
               <label for="name" class="form-label">Product Name</label>
               <input type="text" id="name" v-model="productForm.name" class="form-control" placeholder="Enter product name">
-            </div>
-            <div class="mb-3">
-              <label for="price" class="form-label">Price</label>
-              <input type="number" id="price" v-model="productForm.price" class="form-control" placeholder="Enter price">
             </div>
             <div class="mb-3">
               <label for="description" class="form-label">Description</label>
@@ -100,7 +95,6 @@ export default {
       productForm: {
         id: '',
         name: '',
-        price: '',
         description: '',
         image: null,
         categories: [],
@@ -137,7 +131,6 @@ export default {
       this.productForm = {
         id: product.id,
         name: product.name,
-        price: product.price,
         description: product.description,
         image: null,
         categories: product.categories.map((category) => category.id),
@@ -152,7 +145,6 @@ export default {
       try {
         const formData = new FormData();
         formData.append('name', this.productForm.name);
-        formData.append('price', this.productForm.price);
         formData.append('description', this.productForm.description);
         formData.append('categories', JSON.stringify(this.productForm.categories));
         if (this.productForm.image) {
@@ -214,7 +206,6 @@ export default {
       this.productForm = {
         id: '',
         name: '',
-        price: '',
         description: '',
         image: null,
         categories: [],

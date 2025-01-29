@@ -3,26 +3,16 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\CafeOwnerController;
 use App\Http\Controllers\Api\CategoryController;
-use App\Http\Controllers\Api\ProductController;
 
-Route::apiResource('api/cafe-owners', CafeOwnerController::class);
-Route::apiResource('api/categories', CategoryController::class);
-Route::apiResource('api/products', ProductController::class);
-Route::post('api/cafe-owners/{id}/assign-categories', [CafeOwnerController::class, 'assignCategories']);
-Route::delete('api/cafe-owners/{ownerId}/unassign-category/{categoryId}', [CafeOwnerController::class, 'unassignCategory']);
-Route::get('/', function () {
-    return view('welcome');
-});
+use App\Http\Controllers\Admin\AdminDashboardController;
+
+Route::get('/', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
+
 // Owners management page (homepage)
-// Route::get('/', [CafeOwnerController::class, 'index']);
-// Route::get('/owners/{id}', [CafeOwnerController::class, 'show']);
-
-// Categories management within an owner
 Route::get('/owners/{id}/categories', [CategoryController::class, 'index']);
 Route::post('/owners/{id}/categories', [CategoryController::class, 'store']);
 Route::put('/owners/{id}/categories/{category_id}', [CategoryController::class, 'update']);
 Route::delete('/owners/{id}/categories/{category_id}', [CategoryController::class, 'destroy']);
-// Route::post('/owners/{id}/assign-categories', [CafeOwnerController::class, 'assignCategories']);
 
 Route::get('/{any}', function () {
     return view('layouts.app');

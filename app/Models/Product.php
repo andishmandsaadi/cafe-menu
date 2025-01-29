@@ -12,7 +12,6 @@ class Product extends Model
     protected $fillable = [
         'name',
         'slug',
-        'price',
         'description',
         'image',
     ];
@@ -21,5 +20,12 @@ class Product extends Model
     public function categories()
     {
         return $this->belongsToMany(Category::class);
+    }
+
+    public function cafeOwners()
+    {
+        return $this->belongsToMany(CafeOwner::class, 'cafe_owner_product')
+                    ->withPivot('category_id', 'price')
+                    ->withTimestamps();
     }
 }

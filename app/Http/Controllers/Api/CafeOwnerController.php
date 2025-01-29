@@ -105,6 +105,46 @@ class CafeOwnerController extends Controller
         return response()->json(['message' => 'Category unassigned successfully'], 200);
     }
 
+    public function assignProducts(Request $request, $ownerId)
+    {
+        $owner = CafeOwner::find($ownerId);
+
+        if (!$owner) {
+            return response()->json(['message' => 'Owner not found'], 404);
+        }
+
+        $validated = $request->validate([
+            'category_id' => 'required|exists:categories,id',
+            'product_ids' => 'required|array',
+            'product_ids.*' => 'exists:products,id',
+            'price' => 'required|numeric',
+        ]);
+
+        // Attach products with custom price
+        foreach ($validated['product_ids'] as $productId) {
+            $owner->products()->attach($productId, [
+                'category_id' => $validated['category_id'],
+                'price' => $validated['price'],
+            ]);
+        }
+
+        return response()->json(['message' => 'Products assigned successfully'], 200);
+    }
+
+    public function unassignProduct($ownerId, $categoryId, $productId)
+    {
+        $owner = CafeOwner::find($ownerId);
+
+        if (!$owner) {
+            return response()->json(['message' => 'Owner not found'], 404);
+        }
+
+        // Detach the product
+        $owner->products()->wherePivot('category_id', $categoryId)->detach($productId);
+
+        return response()->json(['message' => 'Product unassigned successfully'], 200);
+    }
+
     /**
      * Update the specified resource in storage.
      */
